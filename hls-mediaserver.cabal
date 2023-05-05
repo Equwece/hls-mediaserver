@@ -1,0 +1,81 @@
+cabal-version:      2.4
+name:               hls-mediaserver
+version:            0.0.1
+author:             Equwece
+maintainer:         99554597+Equwece@users.noreply.github.com
+license:            LGPL-3.0-only
+license-file:       COPYING
+
+library
+  exposed-modules: 
+    API.Resource.Models
+    API.Resource.APISpec
+    API.Resource.Handlers
+    API.Handlers
+    API.APISpec
+    API.Interfaces
+    API.External.Postgres
+    API.Models
+
+  build-depends:
+    base >=4.15,
+    wai,
+    warp,
+    http-types,
+    utf8-string,
+    base-compat-batteries,
+    mtl,
+    aeson,
+    attoparsec,
+    bytestring,
+    string-conversions,
+    time,
+    lucid,
+    http-media,
+    servant,
+    servant-server,
+    dotenv,
+    text,
+    uuid,
+    lens,
+    fast-logger,
+    postgresql-simple,
+    servant-openapi3,
+    openapi3,
+    servant-swagger-ui,
+  hs-source-dirs: src
+  default-language: Haskell2010
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints 
+
+
+executable hls-mediaserver
+  main-is:          Main.hs
+  build-depends:
+    base >=4.15,
+    wai,
+    warp,
+    http-types,
+    utf8-string,
+    base-compat-batteries,
+    mtl,
+    aeson,
+    attoparsec,
+    bytestring,
+    string-conversions,
+    time,
+    lucid,
+    http-media,
+    servant,
+    servant-server,
+    dotenv,
+    text,
+    uuid,
+    lens,
+    fast-logger,
+    postgresql-simple,
+    servant-openapi3,
+    openapi3,
+    hls-mediaserver
+  hs-source-dirs:   app
+  default-language: Haskell2010
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
