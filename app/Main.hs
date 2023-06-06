@@ -7,11 +7,12 @@ import API.External.Postgres
 import API.Handlers (apiServer)
 import API.Interfaces (AppEnvironment (AppEnvironment, db, logger), Logger (Logger, logMsg))
 import Configuration.Dotenv (defaultConfig, loadFile)
-import Control.Monad ((>=>))
+import Control.Monad (when, (>=>))
 import Data.Text as T
 import Data.Text.Encoding as T
 import Data.Time (getCurrentTime)
-import Database.PostgreSQL.Simple (connectPostgreSQL)
+import Database.PostgreSQL.Simple (Connection, connectPostgreSQL)
+import Database.PostgreSQL.Simple.Migration (MigrationCommand (MigrationDirectory, MigrationInitialization), MigrationResult, defaultOptions, runMigration)
 import Network.Wai.Handler.Warp (run)
 import Servant (Application, serve)
 import System.Environment (getEnv)
@@ -20,12 +21,20 @@ import System.Log.FastLogger (LogStr, LogType' (LogStdout), ToLogStr (toLogStr),
 hlsApp :: AppEnvironment -> Application
 hlsApp appEnv = serve proxyAPI (apiServer appEnv)
 
+migrateDb :: Connection -> IO ()
+migrateDb dbConn = do
+  _ <- runMigration dbConn defaultOptions MigrationInitialization
+  _ <- runMigration dbConn defaultOptions (MigrationDirectory "./migration-scripts")
+  return ()
+
 main :: IO ()
 main = do
   withFastLogger (LogStdout defaultBufSize) $ \fastLogger -> do
     _ <- loadFile defaultConfig
     dbConnStr <- getEnv "POSTGRES_CONN_STR"
     pgConn <- connectPostgreSQL . T.encodeUtf8 . T.pack $ dbConnStr
+    doMigrations <- read <$> getEnv "DO_MIGRATIONS"
+    when doMigrations (migrateDb pgConn)
     let logger = Logger {logMsg = wrapLogMsg >=> fastLogger}
         db = PostgresDB pgConn
         appEnv = AppEnvironment {..}

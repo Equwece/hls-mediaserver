@@ -41,6 +41,7 @@ library
     fast-logger,
     postgresql-simple,
     servant-openapi3,
+    servant-auth,
     openapi3,
     servant-swagger-ui,
   hs-source-dirs: src
@@ -75,6 +76,7 @@ executable hls-mediaserver
     postgresql-simple,
     servant-openapi3,
     openapi3,
+    postgresql-migration,
     hls-mediaserver
   hs-source-dirs:   app
   default-language: Haskell2010

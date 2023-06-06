@@ -20,7 +20,7 @@ class PostgresClass a where
 
 instance PostgresClass PostgresDB where
   listResourcesQuery (PostgresDB pgConn) = do
-    query_ pgConn "SELECT id,title,type,segmented FROM resources" :: IO [Resource]
+    query_ pgConn "SELECT id,title,type,segmented FROM resource" :: IO [Resource]
 
   getResourceByIdQuery (PostgresDB pgConn) resId = do
-    query pgConn "SELECT id,title,type,segmented FROM resources WHERE id=?" [resId] :: IO [Resource]
+    query pgConn "SELECT id,title,type,segmented FROM resource WHERE id=?" [resId] :: IO [Resource]
