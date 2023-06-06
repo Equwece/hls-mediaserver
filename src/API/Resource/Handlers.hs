@@ -62,7 +62,7 @@ resourceEntityServer (AppEnvironment {..}) resId = getResource resId :<|> static
         else throwError err404
 
 staticSegmentServer :: UUID -> ServerT Raw Handler
-staticSegmentServer _ = serveDirectoryWebApp "./segments/"
+staticSegmentServer _ = serveDirectoryWebApp "./data/segments/"
 
 staticServer :: ServerT Raw Handler
 staticServer = serveDirectoryWebApp "./static/"

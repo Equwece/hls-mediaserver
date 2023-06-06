@@ -4,13 +4,14 @@ module Main (main) where
 
 import API.APISpec (proxyAPI)
 import API.External.Postgres
+import API.External.Segmentor (segmentContent)
 import API.Handlers (apiServer)
 import API.Interfaces (AppEnvironment (AppEnvironment, db, logger), Logger (Logger, logMsg))
 import Configuration.Dotenv (defaultConfig, loadFile)
 import Control.Monad (when, (>=>))
 import Data.Text as T
 import Data.Text.Encoding as T
-import Data.Time (getCurrentTime)
+import Data.Time (getCurrentTime, diffUTCTime)
 import Database.PostgreSQL.Simple (Connection, connectPostgreSQL)
 import Database.PostgreSQL.Simple.Migration (MigrationCommand (MigrationDirectory, MigrationInitialization), MigrationResult, defaultOptions, runMigration)
 import Network.Wai.Handler.Warp (run)
@@ -38,6 +39,10 @@ main = do
     let logger = Logger {logMsg = wrapLogMsg >=> fastLogger}
         db = PostgresDB pgConn
         appEnv = AppEnvironment {..}
+    startTime <- getCurrentTime
+    segmentContent appEnv
+    endTime <- getCurrentTime
+    logMsg logger (show $ diffUTCTime endTime startTime)
     logMsg logger "API has started..."
     run 8080 (hlsApp appEnv)
 

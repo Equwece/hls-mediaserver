@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -7,6 +8,7 @@ module API.Resource.Models (Resource (..), ResourceType (..)) where
 
 import Control.Lens ((&), (.~), (?~))
 import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON), Value (String))
+import Data.ByteString (ByteString)
 import Data.ByteString.Char8 (pack)
 import Data.OpenApi
   ( HasProperties (properties),
@@ -19,17 +21,19 @@ import Data.OpenApi
   )
 import Data.Proxy (Proxy (..))
 import Data.UUID (UUID)
-import Database.PostgreSQL.Simple (FromRow, ToRow)
+import Database.PostgreSQL.Simple (Only (Only), ToRow)
 import Database.PostgreSQL.Simple.FromField (FromField (fromField))
+import Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
 import Database.PostgreSQL.Simple.ToField (Action (Escape), ToField (toField))
 import GHC.Generics (Generic)
 
 -- Media resource data type
 data Resource = Resource
-  { resourceId :: Maybe UUID,
-    resourceTitle :: Maybe String,
-    resourceType :: Maybe ResourceType,
-    isSegmented :: Maybe Bool
+  { resourceId :: UUID,
+    resourceTitle :: String,
+    resourceType :: ResourceType,
+    isSegmented :: Bool,
+    resourceHash :: String
   }
   deriving (Generic, Show, Eq)
 
@@ -77,3 +81,6 @@ instance FromField ResourceType where
     Just "audio" -> pure Audio
     Just "video" -> pure Video
     _ -> error "Wrong resource type"
+
+instance FromRow UUID where
+  fromRow = field
