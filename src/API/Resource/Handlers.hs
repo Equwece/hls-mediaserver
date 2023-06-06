@@ -9,6 +9,7 @@ module API.Resource.Handlers (resultServer) where
 
 import API.APISpec (RestAPI)
 import API.External.Postgres (PostgresClass (getResourceByIdQuery, listResourcesQuery))
+import API.External.Segmentor (segmentContent)
 import API.Interfaces (AppEnvironment (AppEnvironment, db, logger), Logger (logMsg))
 import API.Models (AuthInput (AuthInput, username), JwtTokens (JwtTokens), RawHtml (RawHtml), RefreshInput (RefreshInput))
 import API.Resource.Models (Resource)
@@ -48,7 +49,10 @@ resourceServer appEnv@(AppEnvironment {..}) =
       resources <- liftIO $ listResourcesQuery db
       liftIO $ logMsg logger "List Resources"
       return resources
-    updateResources = return NoContent
+    updateResources = do
+      liftIO $ segmentContent appEnv
+      liftIO $ logMsg logger "Library was updated"
+      return NoContent
 
 resourceEntityServer :: AppEnvironment -> UUID -> Handler Resource :<|> (Tagged Handler Application :<|> Tagged Handler Application)
 resourceEntityServer (AppEnvironment {..}) resId = getResource resId :<|> staticSegmentServer resId :<|> staticSegmentServer resId
