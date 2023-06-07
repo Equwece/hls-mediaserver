@@ -3,10 +3,19 @@
 
 module API.Users.APISpec where
 
-import API.Resource.Models (Resource)
 import API.Users.Models (User)
 import Data.UUID (UUID)
-import Servant (Capture, Delete, DeleteNoContent, Get, JSON, Post, PostNoContent, Raw, ReqBody, type (:<|>) (..), type (:>))
+import Servant
+  ( Capture,
+    DeleteNoContent,
+    Get,
+    JSON,
+    Post,
+    Raw,
+    ReqBody,
+    type (:<|>),
+    type (:>),
+  )
 
 type UserAPI =
   "users"

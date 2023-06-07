@@ -9,11 +9,13 @@
 
 module API.External.Postgres where
 
+import qualified API.Models as AM
 import API.Resource.Models (Resource (..))
 import API.Users.Models (User (User, auth_type, password, username))
 import Data.Int (Int64)
 import Data.UUID (UUID)
-import Database.PostgreSQL.Simple (Connection, execute, query, query_)
+import Database.PostgreSQL.Simple (Connection, FromRow, execute, query, query_)
+import Database.PostgreSQL.Simple.FromField (FromField)
 
 newtype PostgresDB = PostgresDB {dbConnection :: Connection}
 
@@ -26,8 +28,14 @@ class PostgresClass a where
   listUsersQuery :: a -> IO [User]
   addUserQuery :: a -> User -> IO [UUID]
   getUserByIdQuery :: a -> UUID -> IO [User]
+  getUserByUsernameQuery :: a -> String -> IO [User]
   deleteUserByIdQuery :: a -> UUID -> IO Int64
   updateUserByIdQuery :: a -> User -> UUID -> IO Int64
+
+  addRefreshQuery :: a -> UUID -> IO [UUID]
+  deleteRefreshByIdQuery :: a -> UUID -> IO Int64
+  deleteRefreshByUserIdQuery :: a -> UUID -> IO Int64
+  getRefreshByIdQuery :: a -> UUID -> IO [(UUID, UUID)]
 
 instance PostgresClass PostgresDB where
   listResourcesQuery (PostgresDB pgConn) = do
@@ -75,3 +83,33 @@ instance PostgresClass PostgresDB where
       pgConn
       "UPDATE public.user SET username=?,password=?,auth_type=? WHERE id=?"
       (username, password, auth_type, uId)
+
+  getUserByUsernameQuery (PostgresDB pgConn) uName = do
+    query
+      pgConn
+      "SELECT id,username,password,auth_type,create_date FROM public.user WHERE username=?"
+      [uName]
+
+  addRefreshQuery (PostgresDB pgConn) uId = do
+    query
+      pgConn
+      "INSERT INTO public.refresh (user_id) VALUES (?) RETURNING id"
+      [uId]
+
+  deleteRefreshByIdQuery (PostgresDB pgConn) refreshId = do
+    execute
+      pgConn
+      "DELETE FROM public.refresh WHERE id=?"
+      [refreshId]
+
+  deleteRefreshByUserIdQuery (PostgresDB pgConn) uId = do
+    execute
+      pgConn
+      "DELETE FROM public.refresh WHERE user_id=?"
+      [uId]
+
+  getRefreshByIdQuery (PostgresDB pgConn) rId = do
+    query
+      pgConn
+      "SELECT id,user_id FROM public.refresh WHERE id=?"
+      [rId]

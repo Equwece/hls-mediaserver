@@ -6,12 +6,12 @@ import API.APISpec (proxyAPI)
 import API.External.Postgres
 import API.External.Segmentor (segmentContent)
 import API.Handlers (apiServer)
-import API.Interfaces (AppEnvironment (AppEnvironment, db, logger), Logger (Logger, logMsg))
+import API.Interfaces (AppEnvironment (AppEnvironment, db, jwtEncodeSecret, logger), Logger (Logger, logMsg))
 import Configuration.Dotenv (defaultConfig, loadFile)
 import Control.Monad (when, (>=>))
 import Data.Text as T
 import Data.Text.Encoding as T
-import Data.Time (getCurrentTime, diffUTCTime)
+import Data.Time (diffUTCTime, getCurrentTime)
 import Database.PostgreSQL.Simple (Connection, connectPostgreSQL)
 import Database.PostgreSQL.Simple.Migration (MigrationCommand (MigrationDirectory, MigrationInitialization), MigrationResult, defaultOptions, runMigration)
 import Network.Wai.Handler.Warp (run)
@@ -33,14 +33,16 @@ main = do
   withFastLogger (LogStdout defaultBufSize) $ \fastLogger -> do
     _ <- loadFile defaultConfig
     dbConnStr <- getEnv "POSTGRES_CONN_STR"
+    jwtEncodeSecretString <- getEnv "ENCODE_HMAC_SECRET"
     pgConn <- connectPostgreSQL . T.encodeUtf8 . T.pack $ dbConnStr
     doMigrations <- read <$> getEnv "DO_MIGRATIONS"
     when doMigrations (migrateDb pgConn)
     let logger = Logger {logMsg = wrapLogMsg >=> fastLogger}
         db = PostgresDB pgConn
+        jwtEncodeSecret = T.pack jwtEncodeSecretString
         appEnv = AppEnvironment {..}
     startTime <- getCurrentTime
-    segmentContent appEnv
+    -- segmentContent appEnv
     endTime <- getCurrentTime
     logMsg logger (show $ diffUTCTime endTime startTime)
     logMsg logger "API has started..."

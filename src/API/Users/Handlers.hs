@@ -7,18 +7,18 @@
 
 module API.Users.Handlers where
 
-import API.External.Postgres (PostgresClass (addUserQuery, deleteUserByIdQuery, getUserByIdQuery, listUsersQuery, updateUserByIdQuery))
+import API.External.Postgres (PostgresClass (addUserQuery, deleteUserByIdQuery, getUserByIdQuery, getUserByUsernameQuery, listUsersQuery, updateUserByIdQuery))
 import API.Interfaces
   ( AppEnvironment (AppEnvironment, db, logger),
     Logger (logMsg),
   )
 import API.Users.Models
-import API.Users.Models (User (password))
+import API.Users.Models (User (password, username))
 import Control.Monad.Cont (MonadIO (liftIO))
 import Data.Password.Bcrypt (PasswordHash (unPasswordHash), hashPassword, mkPassword)
 import qualified Data.Text as T
 import Data.UUID (UUID)
-import Servant (Handler, NoContent (NoContent), err404, throwError, type (:<|>) ((:<|>)))
+import Servant (Handler, NoContent (NoContent), err404, err409, throwError, type (:<|>) ((:<|>)))
 
 userServer appEnv@(AppEnvironment {..}) = listUsers :<|> addUser :<|> (userEntityServer appEnv)
   where
@@ -29,10 +29,16 @@ userServer appEnv@(AppEnvironment {..}) = listUsers :<|> addUser :<|> (userEntit
       return users
     addUser :: User -> Handler UUID
     addUser newUser = do
-      hashedPass <- T.unpack . unPasswordHash <$> (hashPassword . mkPassword . T.pack $ password newUser)
-      newUserId <- head <$> liftIO (addUserQuery db (newUser {password = hashedPass}))
-      liftIO $ logMsg logger ("Add User " <> show newUserId)
-      return newUserId
+      checkUserExists <- liftIO $ getUserByUsernameQuery db (username newUser)
+      if null checkUserExists
+        then do
+          hashedPass <- T.unpack . unPasswordHash <$> (hashPassword . mkPassword . T.pack $ password newUser)
+          newUserId <- head <$> liftIO (addUserQuery db (newUser {password = hashedPass}))
+          liftIO $ logMsg logger ("Add User " <> show newUserId)
+          return newUserId
+        else do
+          liftIO . logMsg logger $ "User creation failed: user " <> (username newUser) <> " exists"
+          throwError err409
 
 userEntityServer (AppEnvironment {..}) uId = getResource uId :<|> deleteUser uId :<|> updateUser uId
   where
