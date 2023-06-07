@@ -1,24 +1,31 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 
 module API.APISpec where
 
-import API.Models (AuthInput, HTML (..), JwtTokens, RawHtml (..), RefreshInput)
+import API.Models (Account, AuthInput, HTML (..), JwtTokens, RawHtml (..), RefreshInput)
 import API.Resource.APISpec (ResourceAPI)
-import Data.Text (Text)
-import Servant (CaptureAll, Get, JSON, Post, Proxy (Proxy), Raw, ReqBody, type (:<|>), type (:>))
-import Servant.Swagger.UI (SwaggerSchemaUI)
 import API.Users.APISpec (UserAPI)
+import Data.Text (Text)
+import Servant (AuthProtect, CaptureAll, Get, Header, JSON, Post, Proxy (Proxy), Raw, ReqBody, type (:<|>), type (:>))
+import Servant.Server.Experimental.Auth (AuthServerData)
+import Servant.Swagger.UI (SwaggerSchemaUI)
 
 type API =
   "app" :> CaptureAll "appPath" Text :> Get '[HTML] RawHtml
     :<|> "static" :> Raw
-    :<|> "v1" :> (RestAPI :<|> SwaggerAPI)
+    -- :<|> "v1" :> (RestAPI :<|> SwaggerAPI)
+    :<|> "v1" :> (RestAPI)
 
 type SwaggerAPI =
   SwaggerSchemaUI "swagger-ui" "swagger.json"
 
-type RestAPI = ResourceAPI :<|> AuthAPI :<|> UserAPI
+type RestAPI =
+  -- (AuthProtect "jwt-auth" :> (ResourceAPI :<|> UserAPI)) :<|> AuthAPI
+  ((ResourceAPI :<|> UserAPI)) :<|> AuthAPI
+
+type instance AuthServerData (AuthProtect "jwt-auth") = Account
 
 type AuthAPI =
   "auth"

@@ -7,6 +7,7 @@ import API.External.Postgres
 import API.External.Segmentor (segmentContent)
 import API.Handlers (apiServer)
 import API.Interfaces (AppEnvironment (AppEnvironment, db, jwtEncodeSecret, logger), Logger (Logger, logMsg))
+import API.Resource.Handlers (genAuthServerContext)
 import Configuration.Dotenv (defaultConfig, loadFile)
 import Control.Monad (when, (>=>))
 import Data.Text as T
@@ -15,12 +16,12 @@ import Data.Time (diffUTCTime, getCurrentTime)
 import Database.PostgreSQL.Simple (Connection, connectPostgreSQL)
 import Database.PostgreSQL.Simple.Migration (MigrationCommand (MigrationDirectory, MigrationInitialization), MigrationResult, defaultOptions, runMigration)
 import Network.Wai.Handler.Warp (run)
-import Servant (Application, serve)
+import Servant (Application, serveWithContext)
 import System.Environment (getEnv)
 import System.Log.FastLogger (LogStr, LogType' (LogStdout), ToLogStr (toLogStr), defaultBufSize, withFastLogger)
 
 hlsApp :: AppEnvironment -> Application
-hlsApp appEnv = serve proxyAPI (apiServer appEnv)
+hlsApp appEnv = serveWithContext proxyAPI (genAuthServerContext appEnv) (apiServer appEnv)
 
 migrateDb :: Connection -> IO ()
 migrateDb dbConn = do
@@ -42,7 +43,7 @@ main = do
         jwtEncodeSecret = T.pack jwtEncodeSecretString
         appEnv = AppEnvironment {..}
     startTime <- getCurrentTime
-    -- segmentContent appEnv
+    segmentContent appEnv
     endTime <- getCurrentTime
     logMsg logger (show $ diffUTCTime endTime startTime)
     logMsg logger "API has started..."

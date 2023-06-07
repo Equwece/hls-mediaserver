@@ -5,13 +5,13 @@ module API.Resource.APISpec where
 
 import API.Resource.Models (Resource)
 import Data.UUID (UUID)
-import Servant (Capture, Get, JSON, Post, PostNoContent, Raw, type (:<|>) (..), type (:>))
+import Servant (AuthProtect, Capture, Get, JSON, Post, PostNoContent, Raw, type (:<|>) (..), type (:>))
 
 type ResourceAPI =
-  ("update" :> PostNoContent)
+  (PostNoContent)
     :<|> "resources"
       :> ( Get '[JSON] [Resource]
-             :<|> ResourceEntityAPI
+             :<|> "update" :>  ResourceEntityAPI
          )
 
 type ResourceEntityAPI =
