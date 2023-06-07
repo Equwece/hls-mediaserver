@@ -20,7 +20,7 @@ import qualified Data.Text as T
 import Data.UUID (UUID)
 import Servant (Handler, NoContent (NoContent), err404, err409, throwError, type (:<|>) ((:<|>)))
 
-userServer appEnv@(AppEnvironment {..}) = listUsers :<|> addUser :<|> (userEntityServer appEnv)
+userServer appEnv@(AppEnvironment {..}) acc = listUsers :<|> addUser :<|> (userEntityServer appEnv)
   where
     listUsers :: Handler [User]
     listUsers = do
