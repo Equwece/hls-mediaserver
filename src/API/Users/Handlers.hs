@@ -13,7 +13,10 @@ import API.Interfaces
     Logger (logMsg),
   )
 import API.Users.Models
+import API.Users.Models (User (password))
 import Control.Monad.Cont (MonadIO (liftIO))
+import Data.Password.Bcrypt (PasswordHash (unPasswordHash), hashPassword, mkPassword)
+import qualified Data.Text as T
 import Data.UUID (UUID)
 import Servant (Handler, NoContent (NoContent), err404, throwError, type (:<|>) ((:<|>)))
 
@@ -26,7 +29,8 @@ userServer appEnv@(AppEnvironment {..}) = listUsers :<|> addUser :<|> (userEntit
       return users
     addUser :: User -> Handler UUID
     addUser newUser = do
-      newUserId <- head <$> liftIO (addUserQuery db newUser)
+      hashedPass <- T.unpack . unPasswordHash <$> (hashPassword . mkPassword . T.pack $ password newUser)
+      newUserId <- head <$> liftIO (addUserQuery db (newUser {password = hashedPass}))
       liftIO $ logMsg logger ("Add User " <> show newUserId)
       return newUserId
 
@@ -50,7 +54,8 @@ userEntityServer (AppEnvironment {..}) uId = getResource uId :<|> deleteUser uId
 
     updateUser :: UUID -> User -> Handler User
     updateUser uId newUser = do
-      rowCount <- liftIO $ updateUserByIdQuery db newUser uId
+      hashedPass <- T.unpack . unPasswordHash <$> (hashPassword . mkPassword . T.pack $ password newUser)
+      rowCount <- liftIO $ updateUserByIdQuery db (newUser {password = hashedPass}) uId
       liftIO $ logMsg logger ("Update User " <> show uId)
       if rowCount /= 0
         then do
