@@ -8,6 +8,7 @@ import API.Resource.APISpec (ResourceAPI)
 import Data.Text (Text)
 import Servant (CaptureAll, Get, JSON, Post, Proxy (Proxy), Raw, ReqBody, type (:<|>), type (:>))
 import Servant.Swagger.UI (SwaggerSchemaUI)
+import API.Users.APISpec (UserAPI)
 
 type API =
   "app" :> CaptureAll "appPath" Text :> Get '[HTML] RawHtml
@@ -17,7 +18,7 @@ type API =
 type SwaggerAPI =
   SwaggerSchemaUI "swagger-ui" "swagger.json"
 
-type RestAPI = ResourceAPI :<|> AuthAPI
+type RestAPI = ResourceAPI :<|> AuthAPI :<|> UserAPI
 
 type AuthAPI =
   "auth"

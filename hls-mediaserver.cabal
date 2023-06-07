@@ -11,6 +11,9 @@ library
     API.Resource.Models
     API.Resource.APISpec
     API.Resource.Handlers
+    API.Users.APISpec
+    API.Users.Models
+    API.Users.Handlers
     API.Handlers
     API.APISpec
     API.Interfaces

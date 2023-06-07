@@ -13,20 +13,26 @@ import API.External.Segmentor (segmentContent)
 import API.Interfaces (AppEnvironment (AppEnvironment, db, logger), Logger (logMsg))
 import API.Models (AuthInput (AuthInput, username), JwtTokens (JwtTokens), RawHtml (RawHtml), RefreshInput (RefreshInput))
 import API.Resource.Models (Resource)
+import API.Users.Handlers (userServer)
 import Control.Lens ((&), (.~), (?~))
 import Control.Monad.Cont (MonadIO (liftIO))
 import Data.ByteString.Lazy.UTF8 (fromString)
-import Data.OpenApi (HasInfo (info), HasLicense (license), HasServers (servers), HasTitle (title), HasVersion (version), OpenApi)
+import Data.OpenApi (HasInfo (info), HasLicense (license), HasTitle (title), HasVersion (version), OpenApi)
 import Data.Text (Text)
 import Data.UUID (UUID)
 import Servant (Application, Handler, NoContent (NoContent), Proxy (Proxy), Server, ServerT, Tagged, err404, serveDirectoryWebApp, throwError, type (:<|>) (..))
 import Servant.API (Raw)
 import Servant.OpenApi (HasOpenApi (toOpenApi))
-import Servant.Swagger.UI (SwaggerSchemaUI, SwaggerSchemaUI', swaggerSchemaUIServer)
+import Servant.Swagger.UI (SwaggerSchemaUI, swaggerSchemaUIServer)
 
 resultServer appEnv = clientAppServer appEnv :<|> staticServer :<|> restApiServer appEnv
 
-restApiServer appEnv = (resourceServer appEnv :<|> (createToken appEnv :<|> refreshToken appEnv)) :<|> swaggerServer
+restApiServer appEnv =
+  ( resourceServer appEnv
+      :<|> (createToken appEnv :<|> refreshToken appEnv)
+      :<|> userServer appEnv
+  )
+    :<|> swaggerServer
 
 createToken appEnv AuthInput {..} = return (JwtTokens "" "")
 
