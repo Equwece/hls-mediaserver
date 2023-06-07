@@ -236,7 +236,7 @@ clientAppServer appEnv@(AppEnvironment {..}) appPath = do
   appHtml <- liftIO $ readFile "./templates/index.html"
   return . RawHtml $ fromString appHtml
 
-resourceServer appEnv@(AppEnvironment {..}) =
+resourceServer appEnv@(AppEnvironment {..}) acc =
   updateResources
     :<|> (listResources :<|> resourceEntityServer appEnv)
   where

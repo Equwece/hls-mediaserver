@@ -23,7 +23,7 @@ type SwaggerAPI =
 
 type RestAPI =
   -- (AuthProtect "jwt-auth" :> (ResourceAPI :<|> UserAPI)) :<|> AuthAPI
-  ((ResourceAPI :<|> UserAPI)) :<|> AuthAPI
+  (((AuthProtect "jwt-auth" :> ResourceAPI) :<|> UserAPI)) :<|> AuthAPI
 
 type instance AuthServerData (AuthProtect "jwt-auth") = Account
 

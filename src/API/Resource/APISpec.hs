@@ -8,7 +8,7 @@ import Data.UUID (UUID)
 import Servant (AuthProtect, Capture, Get, JSON, Post, PostNoContent, Raw, type (:<|>) (..), type (:>))
 
 type ResourceAPI =
-  (PostNoContent)
+  ("update" :> PostNoContent)
     :<|> "resources"
       :> ( Get '[JSON] [Resource]
              :<|> "update" :>  ResourceEntityAPI
