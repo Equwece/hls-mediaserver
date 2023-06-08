@@ -11,7 +11,7 @@ type ResourceAPI =
   ("update" :> PostNoContent)
     :<|> "resources"
       :> ( Get '[JSON] [Resource]
-             :<|> "update" :>  ResourceEntityAPI
+             :<|>  ResourceEntityAPI
          )
 
 type ResourceEntityAPI =

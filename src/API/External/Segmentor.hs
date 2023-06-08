@@ -10,7 +10,9 @@ import Control.Monad (forM, forM_)
 import Crypto.Hash.SHA256 (hash, hashlazy)
 import Data.Bifunctor (Bifunctor (second))
 import qualified Data.ByteString.Lazy as LB
-import Data.UUID (nil)
+import Data.List.Split (splitOn)
+import Data.Maybe (fromMaybe)
+import Data.UUID (nil, UUID)
 import System.Directory (listDirectory)
 
 segmentContent :: AppEnvironment -> IO ()
@@ -19,9 +21,13 @@ segmentContent appEnv = do
   sourceTuple <- filter (\(i, _) -> i /= nil) <$> forM sourceFiles (prepareContent appEnv)
   forM_ (map (second ("./data/source/" <>)) sourceTuple) ffmpegScript
 
+prepareContent :: AppEnvironment -> [Char] -> IO (UUID, String)
 prepareContent AppEnvironment {..} mediaFileName = do
   fileContent <- LB.readFile ("./data/source/" <> mediaFileName)
   let fileHash = show . hashlazy $ fileContent
+      mediaName = case splitOn "." mediaFileName of
+        [a, _] -> a
+        _ -> mediaFileName
   maybeResource <- getResourceByHash db fileHash
   if null maybeResource
     then do
@@ -29,7 +35,7 @@ prepareContent AppEnvironment {..} mediaFileName = do
             Resource
               { resourceId = nil,
                 resourceType = Video,
-                resourceTitle = mediaFileName,
+                resourceTitle = mediaName,
                 isSegmented = True,
                 resourceHash = fileHash
               }

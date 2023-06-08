@@ -42,10 +42,11 @@ main = do
         db = PostgresDB pgConn
         jwtEncodeSecret = T.pack jwtEncodeSecretString
         appEnv = AppEnvironment {..}
+    logMsg logger "Check media file hashes"
     startTime <- getCurrentTime
     segmentContent appEnv
     endTime <- getCurrentTime
-    logMsg logger (show $ diffUTCTime endTime startTime)
+    logMsg logger ("Preparation of media files took: " <> show (diffUTCTime endTime startTime))
     logMsg logger "API has started..."
     run 8080 (hlsApp appEnv)
 
